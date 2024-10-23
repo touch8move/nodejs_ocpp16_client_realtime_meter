@@ -261,6 +261,14 @@ function responseHandler(
         setTimeoutPromise(200).then(() => {
             wsBrowser.send(JSON.stringify(['OCPP', getLogs()]));
         })
+
+        wsOcppClient.on('open', () => {
+            console.log(`Successfully connected: ${wsOcppClient._url}`);
+        });
+
+        wsOcppClient.on('error', (error) => {
+            console.error(`Connection error: ${wsOcppClient._url}`, error);
+        });
     }
 
     /**
