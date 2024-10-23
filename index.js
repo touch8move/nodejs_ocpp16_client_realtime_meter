@@ -107,7 +107,7 @@ process.on("SIGINT", async function () {
 });
 
 process.on('uncaughtException', async (err) => {
-    console.error('Error', err);
+    console.error('uncaughtException Error', err);
     await cleanup();
     process.exit(1);
 });
