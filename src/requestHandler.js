@@ -151,7 +151,7 @@ function getPayload(stationId, [action, payloadFromStation = {}], extras) {
             break;
         case 'StatusNotification': {
             // mockup
-            let connectorId = 0;
+            let connectorId = CP[stationId].connectorId;
             let errorCode = 'NoError';  // see section 7.6 in the 1.6 spec
             let info = 'Test';
             let status = 'Available';  // see section 7.7
