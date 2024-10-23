@@ -24,11 +24,11 @@ function composeMessage(action, stationId=0) {
             message = [action, { idTag }];
             break;
         case 'StartTransaction':
-            message = [action, { connectorId: 1, idTag }];
+            message = [action, { connectorId: CP[stationId].connectorId, idTag }];
             break;
         case 'StopTransaction':
             // need client to handle transactionId
-            message = [action, { connectorId: 1, idTag, reason: 'Local' }];
+            message = [action, { connectorId: CP[stationId].connectorId, idTag, reason: 'Local' }];
             break;
         case 'DataTransfer':
         case 'DiagnosticsStatusNotification':
@@ -113,7 +113,7 @@ window.Station = ({ stationProps, stationId }) => {
     const maxPower = stationProps.ratings.amp * stationProps.ratings.voltage / 1000;
 
     const status = {
-        header: stationProps.name,
+        header: `${stationProps.name} - ${stationProps.connectorId}`,
         status: `Status: ${online ? 'online' : 'offline'}`,
         charging,
         power: (((limit === undefined || limit === null) ? maxPower : Number(limit))) * Number(charging)

@@ -132,7 +132,7 @@ function getPayload(stationId, [action, payloadFromStation = {}], extras) {
         case 'MeterValues': {
             // mockup
             const { transactionId, meter } = extras;
-            let connectorId = 1;
+            let connectorId = CP[stationId].connectorId;
             let meterValue = [{
                 timestamp: new Date().toISOString(),
                 sampledValue: [
