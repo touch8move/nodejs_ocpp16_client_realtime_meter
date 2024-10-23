@@ -181,7 +181,7 @@ function OCPPClient(CP, responseHandler) {
     const resHandler = partial(responseHandler, ocppClient);
 
     ws.on('open', function open() {
-        console.log('ws client open');
+        console.log(`${server} client opened`);
     });
 
     ws.on("message", function incoming(data) {
@@ -208,7 +208,7 @@ function OCPPClient(CP, responseHandler) {
                 );
                 break;
             case 'CALLERROR':
-                console.log('Error', response);
+                console.log('CALLERROR Error', response);
                 incMsgId();
                 resHandler(response).handleCallError();
                 break;
