@@ -451,7 +451,7 @@ function mergeTx(TxDefaultProfiles=[], TxProfiles=[]) {
 
 /**
  * Combine max profile with tx profile (after combining TxProfile and
- * TxDefaultProfile). At each instance, the profile with the lowest amp/kw 
+ * TxDefaultProfile). At each instance, the profile with the lowest amp/w 
  * precedes.
  * 
  * @param {array} stackedProfiles stacked max profile and tx profile

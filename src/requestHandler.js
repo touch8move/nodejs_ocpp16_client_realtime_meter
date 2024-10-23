@@ -131,16 +131,17 @@ function getPayload(stationId, [action, payloadFromStation = {}], extras) {
             break;
         case 'MeterValues': {
             // mockup
+            const { transactionId, meter } = extras;
             let connectorId = 1;
             let meterValue = [{
                 timestamp: new Date().toISOString(),
                 sampledValue: [
-                    { value: '10', measurand: 'Energy.Active.Import.Register', unit: 'kWh' },
+                    { value: meter.getMeter(), measurand: 'Energy.Active.Import.Register', unit: 'Wh' },
                     //{ value: '18', measurand: 'Temperature', unit: 'Celcius' },
                     { value: '356', measurand: 'Voltage', unit: 'V' }
                 ]
             }];
-            payload = { connectorId, meterValue };
+            payload = { connectorId, transactionId, meterValue };
         }
             break;
         case 'StartTransaction':
@@ -163,13 +164,13 @@ function getPayload(stationId, [action, payloadFromStation = {}], extras) {
             timestamp = new Date().toISOString();
             const { transactionId, meter } = extras;
 
-            // we need kwh in the payload so need to get meter value here
+            // we need wh in the payload so need to get meter value here
             meter.finishLastMeterSession();
-            let kwh = meter.getMeter();
+            let wh = meter.getMeter();
             meter.clearMeter();
 
             payload = {
-                meterStop: parseInt(kwh*1000),
+                meterStop: parseInt(wh),
                 timestamp,
                 transactionId,
                 idTag: payloadFromStation.idTag,

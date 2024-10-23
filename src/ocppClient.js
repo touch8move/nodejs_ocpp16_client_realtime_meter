@@ -34,12 +34,14 @@ function OCPPClient(CP, responseHandler) {
         composite: []
     };
     let limit = MAX_AMP;
-    let meter = [];  // [{ start, end, kw }, ...]
+    let meter = [];  // [{ start, end, w }, ...]
 
     let profileScheduler = scheduler();
 
     const server = `${config.OCPPServer}/${CP['name']}`;
     const auth = "Basic " + Buffer.from(`${CP['user']}:${CP['pass']}`).toString('base64');
+
+    let updateMeterSessionInterval;
 
     // getters and setters
     function getMsgId() {
@@ -103,15 +105,15 @@ function OCPPClient(CP, responseHandler) {
     }
 
     function getMeter() {
-        const kwhInTx = meter
-            .filter(m => m.end)
-            .reduce((accum, m) => {
-                let duration = (m.end - m.start)/1000/3600;  // hours
-                let kwhThisSession = m.kw * duration;
-                return accum + kwhThisSession;
-            }, 0);
-
-        return kwhInTx.toFixed(3);
+        if (meter.length === 0) {
+            return '0';
+        }
+        
+        const lastSession = meter[meter.length - 1];
+        const end = lastSession.end || Date.now();
+        const duration = (end - lastSession.start) / 1000 / 3600; // 시간 단위
+        const whInTx = lastSession.w * duration;
+        return whInTx.toFixed(0);
     }
 
     function initNewMeterSession() {
@@ -119,22 +121,26 @@ function OCPPClient(CP, responseHandler) {
         meter.push({
             start: now,
             end: undefined,
-            kw: (limit * VOLTAGE / 1000).toFixed(3)
+            w: (limit * VOLTAGE)
         })
+        // Periodically call updateMeterSession (e.g., every 1 second)
+        updateMeterSessionInterval = setInterval(updateMeterSession, 1000);
+    }
+
+    function updateMeterSession() {
+        const now = Date.now();
+        const currentSession = meter[meter.length - 1];
+        
+        meter.push({
+            start: currentSession.start,
+            end: now,
+            w: currentSession.w
+        });
     }
 
     function finishLastMeterSession() {
-        const now = Date.now();
-        const pendingIdx = meter.length - 1;
-        if (pendingIdx > -1) {
-            const session = {
-                start: meter[pendingIdx].start,
-                end: now,
-                kw: meter[pendingIdx].kw
-            };
-
-            meter[pendingIdx] = session;
-        }
+        clearInterval(updateMeterSessionInterval);
+        updateMeterSession();
     }
 
     function clearMeter() {
@@ -172,7 +178,8 @@ function OCPPClient(CP, responseHandler) {
             getMeter,
             initNewMeterSession,
             finishLastMeterSession,
-            clearMeter
+            clearMeter,
+            updateMeterSession
         },
         getRatings,
         scheduler: profileScheduler
