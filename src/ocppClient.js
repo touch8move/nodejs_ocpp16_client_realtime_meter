@@ -124,7 +124,7 @@ function OCPPClient(CP, responseHandler) {
             w: (limit * VOLTAGE)
         })
         // Periodically call updateMeterSession (e.g., every 1 second)
-        updateMeterSessionInterval = setInterval(updateMeterSession, 1000);
+        updateMeterSessionInterval = setInterval(updateMeterSession, 60000);
     }
 
     function updateMeterSession() {
@@ -136,11 +136,53 @@ function OCPPClient(CP, responseHandler) {
             end: now,
             w: currentSession.w
         });
+
+        // 활성 트랜잭션이 있을 때만 MeterValues 전송
+        if (activeTransaction) {
+            const messageId = getMsgId();
+            const meterValue = {
+                connectorId: 1,
+                transactionId: activeTransaction.transactionId,
+                meterValue: [{
+                    timestamp: new Date().toISOString(),
+                    sampledValue: [{
+                        value: getMeter(),
+                        context: "Sample.Periodic",
+                        format: "Raw",
+                        measurand: "Energy.Active.Import.Register",
+                        unit: "Wh"
+                    }]
+                }]
+            };
+
+            // queue에 요청 추가
+            addToQueue({
+                messageId,
+                action: "MeterValues",
+                ...meterValue
+            });
+
+            // MeterValues 요청 전송
+            ws.send(JSON.stringify([
+                2, // CALL
+                messageId,
+                "MeterValues",
+                meterValue
+            ]));
+        }
     }
 
     function finishLastMeterSession() {
         clearInterval(updateMeterSessionInterval);
-        updateMeterSession();
+        const now = Date.now();
+        const currentSession = meter[meter.length - 1];
+        
+        meter.push({
+            start: currentSession.start,
+            end: now,
+            w: currentSession.w
+        });
+        // updateMeterSession();
     }
 
     function clearMeter() {
